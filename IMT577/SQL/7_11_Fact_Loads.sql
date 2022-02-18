@@ -6,7 +6,7 @@ Date: 02/16/2022
 CREATE OR REPLACE TABLE Fact_SalesActual(
     DimProductID INT CONSTRAINT FK_FactSalesDimProduct FOREIGN KEY
         REFERENCES DIM_PRODUCT (DimProductID) NOT NULL
-  ,DimStore INT CONSTRAINT FK_FactSalesDimStore FOREIGN KEY
+  ,DimStoreID INT CONSTRAINT FK_FactSalesDimStore FOREIGN KEY
         REFERENCES DIM_Store (DimStoreID) NOT NULL
   ,DimResellerID INT CONSTRAINT FK_FactSalesDimReseller FOREIGN KEY
         REFERENCES DIM_Reseller (DimResellerID) NOT NULL
@@ -143,17 +143,32 @@ INSERT INTO Fact_SalesActual (
     SaleAmount,
     SaleQuantity,
     SaleUnitPrice,
-    SaleExtenedCost,
+    SaleExtendedCost,
     SaleTotalProfit
 )
 SELECT
-*
+p.DimProductID,
+nvl(s.DimStoreID, -1),
+nvl(r.DimResellerID, -1),
+nvl(c.DimCustomerID, -1),
+ch.DimChannelID,
+d.Date_PKey,
+nvl(l.DimLocationID, -1),
+sh.SalesHeaderID,
+sd.SalesDetailID,
+sd.SalesAmount,
+sd.SalesQuantity,
+(sd.SalesAmount / sd.SalesQuantity),
+CASE when (sd.SalesAmount / sd.SalesQuantity) = p.ProductRetailPrice then p.ProductRetailPrice else p.ProductWholesalePrice end,
+CASE when (sd.SalesAmount / sd.SalesQuantity) = p.ProductRetailPrice then (p.ProductRetailProfit * sd.SalesQuantity) else (p.ProductWholesaleUnitProfit * sd.SalesQuantity) end
 FROM 
 Stage_SalesDetail sd
 JOIN Stage_SalesHeader sh 
 ON sd.SalesHeaderID = sh.SalesHeaderID
 JOIN Dim_Product p 
 ON sd.ProductID = p.ProductID
+JOIN Dim_Channel ch
+on sh.ChannelID = ch.ChannelID
 LEFT OUTER JOIN Dim_Store s
 ON sh.StoreID = s.SourceStoreID
 LEFT OUTER JOIN Dim_Reseller r
