@@ -1,3 +1,4 @@
+/******************************
 Course: IMT 577
 Instructor: Sean Pettersen
 Date: 02/16/2022
@@ -61,7 +62,7 @@ insert into fact_productSalesTarget
 SELECT distinct 
     p.DimProductID,
     d.Date_PKey,
-    spst.ProductID
+    spst.SalesQuantityTarget
 FROM
     Stage_ProductSalesTarget spst
 INNER JOIN Dim_Product p
@@ -71,7 +72,7 @@ ON d.Year = spst.Year;
 
 -----------------------------------------------------
 
-INSERT INTO Fact_SRCSalesTarget (
+/*INSERT INTO Fact_SRCSalesTarget (
     DimStoreID,
     DimResellerID,
     DimChannelID,
@@ -87,13 +88,45 @@ ssst.TargetSalesAmount
 FROM
 Stage_SRCSalesTarget ssst
 JOIN Dim_Channel c
-ON ssst.ChannelName = c.ChannelName
+ON c.ChannelName = CASE when ssst.ChannelName = 'Online' then 'On-line' else ssst.ChannelName end
 LEFT OUTER JOIN Dim_Store s
 ON ssst.TargetName = 'Store Number ' || s.StoreName
 LEFT OUTER JOIN Dim_Reseller r
-ON    ssst.TargetName = CASE WHEN r.ResellerName = 'Mississipi Distributors' then 'Mississippi Distributors' else r.ResellerName end
+ON ssst.TargetName = CASE WHEN r.ResellerName = 'Mississipi Distributors' then 'Mississippi Distributors' else r.ResellerName end
 LEFT OUTER JOIN Dim_Date d
 ON d.Year = ssst.Year
+*/
+
+INSERT INTO Fact_SRCSalesTarget (
+    DimStoreID,
+    DimResellerID,
+    DimChannelID,
+    DimTargetDateID,
+    SalesTargetAmount
+)
+select distinct
+CASE
+       WHEN targetname = 'Store Number 5' then 5
+       WHEN targetname = 'Store Number 8' then 8
+       WHEN targetname = 'Store Number 10' then 10
+       WHEN targetname = 'Store Number 21' then 21
+       WHEN targetname = 'Store Number 34' then 34
+       WHEN targetname = 'Store Number 39' then 39
+       else -1
+END as storeid,
+NVL(r.Dimresellerid, -1) as resellerid,
+c.DimChannelID,
+d.date_pkey,
+src.targetSalesAmount
+from stage_srcsalestarget src
+INNER JOIN Dim_Channel c
+ON c.ChannelName = CASE when src.ChannelName = 'Online' then 'On-line' else src.ChannelName end
+LEFT OUTER JOIN Dim_Store s
+LEFT OUTER JOIN Dim_Reseller r
+ON src.TargetName = CASE WHEN r.ResellerName = 'Mississipi Distributors' then 'Mississippi Distributors' else r.ResellerName end
+LEFT OUTER JOIN Dim_Date d
+on src.Year = d.Year
+
 
 ------------------------------------
 /****************** 2013-01-01 DNE ********************/
