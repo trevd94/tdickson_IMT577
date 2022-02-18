@@ -304,7 +304,8 @@ select DATE_PKEY,
 	    
         
     --( select to_date('01-25-2019 23:25:11.120','MM-DD-YYYY HH24:MI:SS.FF') as DD, /*<<Modify date for preferred table start date*/    
-    ( select to_date('2013-01-01 00:00:01','YYYY-MM-DD HH24:MI:SS') as DD, /*<<Modify date for preferred table start date*/
+    --( select to_date('2013-01-01 00:00:01','YYYY-MM-DD HH24:MI:SS') as DD, /*<<Modify date for preferred table start date*/
+	  ( select to_date('2012-12-31 23:59:59','YYYY-MM-DD HH24:MI:SS') as DD, /*<<Modify date for preferred table start date*/
 			seq1() as Sl,row_number() over (order by Sl) as row_numbers,
 			dateadd(day,row_numbers,DD) as V_DATE,
 			case when date_part(dd, V_DATE) < 10 and date_part(mm, V_DATE) > 9 then
